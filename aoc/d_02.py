@@ -1,24 +1,100 @@
-from typing import Dict, List
-from re import search
+from __future__ import annotations
+from typing import List, Dict
+from re import search, Match
+from os import path
+
 
 class Result:
-    def __init__(self, r: int = 0, g: int = 0, b: int = 0):
-        self.r = r
-        self.g = g
-        self.b = b
+    COLORS: List[str] = ['red', 'green', 'blue']
 
-def get_game_results(line: str) -> List[Result]:
-    line = line.split(': ')[1]
-    results_list_raw: List[str] = line.split(';')
-    results_list: List[Result] =[]
-    for str_result in results_list_raw:
-        print(search(r'\d\b', str_result))
+    def __init__(self, values: List[int]):
+        self.values: Dict[str, int] = {
+            color: value for color, value in zip(self.COLORS, values)
+            }
 
-def load_games(file_path):
-    with open(file_path) as f:
-        for line in f:
-            pass
+    def __str__(self) -> str:
+        representation: str = "Result: "
+        for color in self.COLORS:
+            representation += "{} {}".format(self.values[color], color)
+            if color != self.COLORS[-1]:
+                representation += ", "
+        return representation
+    
+    def __repr__(self) -> str:
+        return "<" + self.__str__() + ">"
+    
+    def is_valid(self, thresholds: Dict[str, int]) -> bool:
+        for color in thresholds:
+            if self.values[color] > thresholds[color]:
+                return False
+        return True
+    
+    @staticmethod
+    def _get_color_number(color, params_str: str) -> int:
+        pattern: str = r'(\d+)\s' + color
+        match: Match | None = search(pattern, params_str)
+        if match:
+            return int(match.group(1))
+        else:
+            return 0
 
+    @classmethod
+    def result_from_str(cls, params_str: str) -> cls:
+        arguments: List[int] = [
+            cls._get_color_number(color, params_str) for color in cls.COLORS
+            ]
+        return cls(arguments)
 
-load_games('AdventOfCode\\2023\\input\\02.txt')
-get_game_results('Game 17: 2 blue, 4 green, 3 red; 2 red, 5 green, 11 blue; 5 green, 15 blue, 2 red; 3 green, 13 blue; 6 blue, 2 green, 2 red; 8 blue, 1 red')
+class Game:
+    def __init__(self, results: List[Result]):
+        self.results = results
+
+    def __repr__(self) -> str:
+        representation: str = "Game: "
+        for result in self.results:
+            representation += repr(result)
+            if result != self.results[-1]:
+                representation += ", "
+        return representation
+    
+    def is_valid(self, thresholds: Dict[str, int]) -> bool:
+        for result in self.results:
+            if not result.is_valid(thresholds):
+                return False
+        return True
+
+    @classmethod
+    def game_from_str(cls, line: str) -> cls:
+        line = line.split(': ')[1]
+        results_list_str: List[str] = line.split(';')
+        results_list: List[Result] = [
+            Result.result_from_str(res_str) for res_str in results_list_str
+            ]
+        return cls(results_list)
+
+    @staticmethod
+    def load_games(file_path) -> List[Game]:
+        games_list: List[Game] = []
+        with open(file_path) as f:
+            for line in f:
+                games_list.append(Game.game_from_str(line))
+        return games_list
+    
+    @staticmethod
+    def count_valid_games(games: List[Game], thresholds: Dict[str, int]) -> int:
+        valid_ids_sum: int = 0
+        for i in range(len(games)):
+            if games[i].is_valid(thresholds):
+                valid_ids_sum += i+1
+        return valid_ids_sum
+
+if __name__ == '__main__':
+    thresholds: Dict[str, int] = {
+        'red': 12,
+        'green': 13,
+        'blue': 14
+    }
+    input_path: str = path.join(path.dirname(__file__), 'input', '02.txt')
+    games: List[Game] = Game.load_games(input_path)
+
+    print('Part one solution:', Game.count_valid_games(games, thresholds))
