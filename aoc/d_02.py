@@ -45,6 +45,29 @@ class Result:
             ]
         return cls(arguments)
 
+class FewestNumbers(Result):
+    def __init__(self, game: Game):
+        fewest_values: List[int] = []
+        for color in self.COLORS:
+            max_value: int = 0
+            for result in game.results:
+                max_value = max(max_value, result.values[color])
+            fewest_values.append(max_value)
+        super().__init__(fewest_values)
+        
+    def calculate_power(self) -> int:
+        power: int = 1
+        for color in self.COLORS:
+            power *= self.values[color]
+        return power
+
+    @staticmethod
+    def count_powers(fewest_numbers_list: List[FewestNumbers]) -> int:
+        power_sum: int = 0
+        for fn in fewest_numbers_list:
+            power_sum += fn.calculate_power()
+        return power_sum
+
 class Game:
     def __init__(self, results: List[Result]):
         self.results = results
@@ -96,5 +119,9 @@ if __name__ == '__main__':
     }
     input_path: str = path.join(path.dirname(__file__), 'input', '02.txt')
     games: List[Game] = Game.load_games(input_path)
-
     print('Part one solution:', Game.count_valid_games(games, thresholds))
+
+    fewest_numbers_list: List[FewestNumbers] = []
+    for game in games:
+        fewest_numbers_list.append(FewestNumbers(game))
+    print('Part two solution:', FewestNumbers.count_powers(fewest_numbers_list))
