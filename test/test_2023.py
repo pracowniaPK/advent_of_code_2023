@@ -1,9 +1,8 @@
 import unittest
 from sys import path
 
-from aoc.d_01 import get_calibration_value
+from aoc.d_01 import get_calibration_value, replace_sequences
 from aoc.d_02 import Result, Game
-from aoc.utils import replace_sequences
 
 
 class TestDay01(unittest.TestCase):

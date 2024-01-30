@@ -1,8 +1,6 @@
 from typing import Dict, List
 from os import path
 
-from utils import replace_sequences
-
 
 def get_digits_dictionary() -> Dict[str, str]:
     digits_names: List[str] = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
@@ -11,6 +9,11 @@ def get_digits_dictionary() -> Dict[str, str]:
     for name, digit in zip(digits_names, digits):
         digits_combined.append(name + digit + name)
     return dict(zip(digits_names, digits_combined))
+
+def replace_sequences(in_string: str, replacements: Dict[str, str]) -> str:
+    for old_seq, new_seq in replacements.items():
+        in_string = in_string.replace(old_seq, new_seq)
+    return in_string
 
 def get_calibration_value(line: str) -> int:
     line_with_transformed_digits = replace_sequences(line, get_digits_dictionary())
